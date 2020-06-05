@@ -1,0 +1,18 @@
+{
+  "name": "ProdSalePro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cos-wx-sdk-v5": "^0.7.10",
+    "goeasy": "^1.0.4",
+    "js-md5": "^0.7.3",
+    "socket.io-client": "^2.3.0"
+  }
+}

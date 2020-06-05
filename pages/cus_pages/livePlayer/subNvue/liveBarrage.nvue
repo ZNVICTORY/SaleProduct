@@ -1,0 +1,73 @@
+<template>
+	<view class="content">
+	   <template v-for="(item, index) in items" >
+		   <view class="danmuitem" :key="index" >
+		   	  <text class="danmuname" :style="{
+				  color: getRandomColor()
+			  }">{{item.name}}</text> 
+			  <text class="danmumes" :style="{
+				  color: getRandomColor()
+			  }">{{item.message}}</text>
+		   </view>
+	   </template>
+	</view>
+</template>
+
+<script>
+	export default {
+		onLoad() {
+			uni.$on("showBarrage", (data) => {
+				const  content = JSON.parse(data.content)
+				this.items.push(content)
+				if(this.items.length > 7) {
+					this.items.shift()
+				}
+			})
+		},
+		data() {
+			return {
+				items:[]   //弹幕容器
+			}
+		},
+		methods: {
+			// 弹幕字体颜色
+		    getRandomColor() {
+			  let rgb = []
+			  for (let i = 0; i < 3; ++i) {
+				let color = Math.floor(Math.random() * 256).toString(16)
+				color = color.length == 1 ? '0' + color : color
+				rgb.push(color)
+			  }
+			  return '#' + rgb.join('')
+			},
+		}
+	}
+</script>
+
+<style>
+	.content {
+		flex-direction: column;
+		padding-top: 5px;
+	}
+	.danmuitem {
+		flex-direction: row;
+		justify-content: flex-start;
+		padding:5upx 5px ;
+	}
+	.danmuname {
+		background-color: rgba(0,0,0,0.4); 
+		border-top-left-radius: 5px;
+		border-bottom-left-radius: 5px;
+		color: #F0AD4E;
+		font-size: 13px;
+		padding: 4px 7px;
+	}
+	.danmumes {
+		background-color: rgba(0,0,0,0.4); 
+		border-top-right-radius: 5px;
+		border-bottom-right-radius: 5px;
+		color: #FFFFFF;
+		font-size: 13px;
+		padding: 4px 10px 4px 4px;
+	}
+</style>

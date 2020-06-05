@@ -1,0 +1,145 @@
+<template>
+	<view>
+		<view class="content">
+			<view v-if="isShop" @click="showCategory">
+				<image class="shoplogo" src="../../../../static/imgs/Shopping.png" mode="aspectFit"></image>
+			</view>
+			<view class="input-box" >
+				<input
+				  :class="isFocus? 'focusInput' : 'blurInput'"
+				  adjust-position="true"
+				  placeholder="跟主播聊些什么"
+				  v-model="barrage"
+				  @blur="keyblur"
+				  @focus="inputKey"
+				  />
+				<button :class="isFocus? 'focusBtn': 'sendbtn'" @click="sendbtn">
+					<text style="color: #FFFFFF;font-size: 14px;">发送</text>
+				</button>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import { msg } from '@/apis/index.js'
+	export default {
+		data() {
+			return {
+				barrage: '',
+				isShop: true,
+				isFocus: false,
+				keyHeight: 0
+			}
+		},
+		onLoad() {
+			//  监听键盘高度
+			
+		},
+		methods: {
+			// 收起键盘
+			keyblur(){
+				this.isShop = true
+				this.isFocus = false
+			},
+			// 显示键盘
+			inputKey() {
+				this.isShop = false	
+				this.isFocus = true
+				uni.onKeyboardHeightChange(res => {
+				  // console.log("键盘高度",res.height)
+				  this.keyHeight= res.height
+				})
+			},
+			// 发送弹幕
+			sendbtn() {
+				if(this.barrage) {
+					msg('发送弹幕')
+					uni.$emit('barrage', { msg: this.barrage })
+					this.barrage = ''
+					uni.hideKeyboard()
+				} else {
+					msg('您还没有输入内容')
+				}
+			},
+			// 点击shop图标 展示产品列表
+			showCategory() {
+				const product = uni.getSubNVueById("liveProduct")
+				product.show("slide-in-bottom")
+			}
+		},
+		onUnload() {
+			uni.$off("barrage")
+		}
+	} 
+</script>
+
+<style>
+  .content {
+	  position: fixed;
+	  bottom: 0;
+	  justify-content: flex-start;
+	  align-items: center;
+	  flex-direction: row;
+	  
+  }
+  .shoplogo {
+	  width: 90upx;
+	  height: 120upx;
+	  margin: 0 10upx 5px 10px;
+  }
+  .input-box {
+	  flex: 1;
+	  flex-direction: row;
+	  justify-content: flex-start;
+	  margin-right: 20px;
+  }
+  .blurInput{
+	  text-overflow: ellipsis;
+	  flex: 1;
+	  width: 220px;
+	  border-width: 1px;
+	  border-color: #FFFFFF;
+	  border-style: solid;
+	  height: 70upx;
+	  padding-left: 30upx;
+	  border-top-left-radius: 50px;
+	  border-bottom-left-radius: 50px;
+	  line-height: 80upx;
+	  color: #FFFFFF;
+	  font-size: 16px;
+	  border-right-width: 0;
+  }
+  .focusInput {
+	  text-overflow: ellipsis;
+	  flex: 1;
+	  width: 300px;
+	  border-width: 1px;
+	  border-color: #FFFFFF;
+	  border-style: solid;
+	  height: 70upx;
+	  padding-left: 30upx;
+	  line-height: 80upx;
+	  color: #FFFFFF;
+	  font-size: 16px;
+	  border-right-width: 0;
+  }
+  .sendbtn {
+	  height: 70upx;
+	  border-top-right-radius: 50px;
+	  border-bottom-right-radius: 50px;
+	  border-radius: 0;
+	  width: 150upx;
+	  color: #FFFFFF;
+	  background-color: rgba(255,255,255,0.3);
+	  border-width: 1px;
+  }
+  .focusBtn {
+	  height: 70upx;
+	  border-radius: 0;
+	  width: 125upx;
+	  color: #FFFFFF;
+	  background-color: rgba(255,255,255,0.3);
+	  border-width: 1px;
+  }
+</style>

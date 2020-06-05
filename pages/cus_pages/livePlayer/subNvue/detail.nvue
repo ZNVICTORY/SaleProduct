@@ -1,0 +1,303 @@
+<template>
+	<view class="content">
+		<view class="prod-desc">
+			<image class="img" :src="goods.goods_avatar" ></image>
+			<view class="detail-introd">
+				<view class="price">
+					<text style="font-size: 25upx;color: #E45E47;margin-right: 10upx;">¥</text>
+					<text style="font-size: 40upx;color: #E45E47;font-weight: bold;" v-model="price">{{ price }}</text>
+				</view>
+				<text class="stock">库存{{goods.goods_stock}}</text>
+				<text class="stock">销量{{goods.goods_sales}}</text>
+				<text class="detail-specification">已选 {{checked.specification}} {{checked.net_weight}}</text>
+			</view>
+			<uni-icon 
+			  class="exit" 
+			  type="closeempty" 
+			  size="20" 
+			  color="#DDDDDD"
+			  @click="exit"></uni-icon>
+		</view>
+		<view class="net-weight">
+			<text class="net-title">净含量</text>
+			<view class="container">
+				<template v-for="(item, index) in goods.goods_infos">
+					<text 
+					  class="net-val" 
+					  :key="item.id" 
+					  :class="{checked: item.net_weight == checked.net_weight}" 
+					  @click="check(item, item.net_weight)">{{ item.net_weight }}</text>
+				</template>
+			</view>
+		</view>
+		<view class="specification">
+			<text class="specification-title">规格</text>
+			<view class="container">
+				<template v-for="(item, index) in goods.goods_infos ">
+					<text 
+					  class="specification-val"
+					  :class="{ checked: item.specification == checked.specification}"
+					  :key="index" 
+					  @click="check(item, item.specification)">{{item.specification}}</text>
+				</template>
+			</view>
+		</view>
+		<view class="purchase-quantity">
+			<text class="purchase-title">购买数量</text>
+			<uni-number-box 
+			  class="purchase-val" 
+			  :value="1" 
+			  :min="1" 
+			  :max="parseInt(goods.goods_stock)"  
+			  @change="bindChange" ></uni-number-box>
+		</view>
+		<view class="btn-group">
+			<button class="cart-btn" type="warn" @click="addTocart">
+				<text style="color: #FFFFFF; font-size: 28upx;">加入购物车</text>
+			</button>
+		    <button class="direct-purchase" type="warn">
+				<text style="color: #FFFFFF;font-size: 28upx;" @click="directPurchase">立即购买</text>
+			</button>
+		</view>
+	</view>
+</template>
+
+<script>
+	import uniIcon from '@/components/uni-icons/uni-icons.vue'
+	import uniNumberBox from '@/components/uni-number-box/uni-number-box.vue'
+	import { increaseCart, msg } from '@/apis/index.js'
+	
+	export default {
+		components: {
+			uniIcon,
+			uniNumberBox
+		},
+		data() {
+			return {
+				goods : {},
+				detail: [],
+				checked: {
+					net_weight: "",
+					specification: ""
+				},
+				goods_num: 1,
+				live_id: '',
+				price: 0,
+			}
+		},
+		onLoad(params) {
+			this.live_id = params.live_id
+			uni.$on("goodsItem", (res) => {
+				// console.log(res)
+				this.goods = res.goods
+				this.checked.net_weight = this.goods.goods_infos[0].net_weight
+				this.checked.specification = this.goods.goods_infos[0].specification
+				this.price = this.goods.goods_infos[0].goods_price
+			})
+		},
+		methods: {
+			// 购买商品数量
+			bindChange(value) {
+				this.goods_num = value
+			},
+			// 退出详细页面
+			exit() {
+				const isDetail = uni.getSubNVueById("prodDetail")
+				isDetail.hide("slide-out-bottom")
+			},
+		    // 添加购物车或下单前进行参数检查
+            missAttribute() {
+				if(!this.checked.net_weight || !this.checked.specification) {
+					msg('请选择好商品格式')
+					return false
+				}
+				return true
+			},
+			// 加入购物车
+			async addTocart() {
+				if(!this.missAttribute()) return
+				const data = this.packageData()
+				const result = await increaseCart(data)
+				if(result.code === "000000") {
+					uni.showModal({
+						content:"已添加购物车，是否前去购物车查看",
+						success(e) {
+							e.confirm ? uni.switchTab({ url: "/pages/cus_pages/cart/cart"}) : "",
+							e.cancel ? msg('添加成功') : ""
+						}
+					})
+				}
+			},
+			//选择商品款式
+			check(obj, value) {
+				const key = Object.entries(obj).filter(item => item[1] === value).map(m => m[0])
+				this.$set(this.checked, key, value)
+				this.goods.goods_infos.map(item => {
+					if(item.net_weight === this.checked.net_weight && item.specification === this.checked.specification) {
+						this.price = item.goods_price
+					}
+				})
+			},
+			// 直接购买
+			directPurchase() {
+				if(!this.missAttribute()) return
+				const data = {
+					live_id: this.live_id,
+					shop_id: this.goods.shop_id, 
+					goods_id: this.goods.goods_id,
+					goods_price: this.price,
+					...this.checked, 
+					goods_num:this.goods_num
+				}
+				uni.getCurrentSubNVue().hide("slide-out-bottom")
+				msg('创建订单')
+				uni.redirectTo({
+					url: '../order/createOrder?data='+JSON.stringify(data)
+				})
+			},
+			/**
+			 * 封装goodsData
+			 * @return {Object} data
+			 * */ 
+			packageData() {
+				const data = {
+					uid: uni.getStorageSync("Info").uid,
+					goods_id: this.goods.goods_id,
+					shop_id: this.goods.shop_id,
+					goods_price: this.price,
+					goods_name: this.goods.goods_name,
+					goods_stock: this.goods.goods_stock,
+					goods_avatar: this.goods.goods_avatar,
+					...this.checked,
+					goods_num: this.goods_num	
+				}
+				return data
+			}
+		}
+	}
+</script>
+
+<style>
+.content {
+	padding: 40upx 20upx;
+	flex-direction: column;
+}
+.prod-desc {
+	flex-direction: row;
+}
+.img {
+	width: 250upx;
+	height: 250upx;
+	border-radius: 10upx;
+}
+.detail-introd {
+	flex: 1;
+	flex-direction: column;
+	justify-content: center;
+	padding: 50upx 40upx;
+}
+.price {
+	flex-direction: row;
+    align-items: center;
+	flex: 1;
+}
+.stock { 
+	color: #E5E5E5;
+	font-size: 32upx;
+	flex: 1;
+}
+.detail-specification {
+	color: #000000;
+	font-size: 25upx;
+	flex: 1;
+}
+.exit {
+	position: fixed;
+	top: 30upx;
+	right: 30upx;
+}
+.net-weight, .specification{
+  height: 200upx;
+  padding: 20upx 20upx;
+  justify-content: center;
+  border-bottom-width: 1upx;
+  border-bottom-color: #EEEEEE;
+}
+.container {
+	flex-direction: row;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+}
+.net-title, .specification-title, .purchase-title{
+	font-size: 30upx;
+	margin-bottom: 20upx;
+	
+}
+.net-val , .specification-val{
+	height: 60upx;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	margin-right: 15upx;
+	border-radius: 6px;
+	background-color: #EEEEEE;
+	padding: 12upx 30upx;
+	font-size: 30upx;
+	color: #000000;
+	margin-top: 5upx;
+	text-overflow: ellipsis;
+}
+.checked {
+	color: #FFFFFF;
+	background-color: #ed1c24;
+}
+.purchase-quantity {
+	height: 150upx;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20upx 20upx;
+    border-bottom-width: 1upx;
+    border-bottom-color: #EEEEEE;
+}
+.purchase-val {
+	transform: scale(0.9);
+}
+.btn-group {
+	position: fixed;
+	flex-direction: row;
+	border-top-width: 1upx;
+	border-top-color: #EEEEEE;
+	padding: 20upx 20upx;
+	align-items: center;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	justify-content: center;
+}
+.cart-btn {
+	width: 320upx;
+	height: 80upx;
+	border-top-left-radius: 50upx;
+	border-bottom-left-radius: 50upx;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+	background-color: #E45E47;
+	color: #FFFFFF;
+	border-width: 0;
+}
+.direct-purchase {
+	width: 320upx;
+	height: 80upx;
+	border-top-right-radius: 50upx;
+	border-bottom-right-radius: 50upx;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	background-color: #ed1c24 ;
+	color: #FFFFFF;
+	border-width: 0;
+}
+.btn-hover {
+	background-color: #E45E47;
+}
+</style>

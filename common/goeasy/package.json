@@ -1,0 +1,44 @@
+{
+  "_from": "goeasy",
+  "_id": "goeasy@1.0.4",
+  "_inBundle": false,
+  "_integrity": "sha1-ZTM42hlAsH6FDak3eOMrTduJVUE=",
+  "_location": "/goeasy",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "goeasy",
+    "name": "goeasy",
+    "escapedName": "goeasy",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npm.taobao.org/goeasy/download/goeasy-1.0.4.tgz",
+  "_shasum": "653338da1940b07e850da93778e32b4ddb895541",
+  "_spec": "goeasy",
+  "_where": "/Users/zhangmeng/code/HBuilderProjects/ProdSalePro",
+  "author": {
+    "name": "GoEasy team"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "www.goeasy.io",
+  "keywords": [
+    "websocket",
+    "realtime",
+    "app",
+    "微信小程序",
+    "即时通讯",
+    "推送"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "goeasy",
+  "version": "1.0.4"
+}

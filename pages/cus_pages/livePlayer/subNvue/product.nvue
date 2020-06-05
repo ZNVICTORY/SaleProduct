@@ -1,0 +1,171 @@
+<template>
+	<scroll-view class="content" show-scrollbar="false" >
+		<text class="title">全部宝贝{{product.length}}</text>
+	    <uni-icon
+	      class="exit" 
+	      type="closeempty" 
+	      size="20" 
+	      color="#DDDDDD"
+	      @click="exit"></uni-icon>
+		<view v-if="product.length === 0">
+		   <text>商品为空</text>
+		</view>
+		<list show-scrollbar="false"> 
+			<cell class="product-item" v-for="(item , index) in product" :key="index">
+				<image class="prod-image" :src="item.goods_avatar" ></image>
+				<view class="prod-info">
+					<view @click="navToDetailPage(item)" class="prod-title">
+						<text class="prod-desc">{{item.goods_name}}</text>
+						<text style="color:#E45E47; font-size: 25upx;">查看详情>></text>
+					</view>
+					<view class="price">
+						<text style="color:#E45E47; font-size: 30upx;">¥{{item.goods_infos[0].goods_price}}</text>
+						<view class="cart" hover-class="cart-hover"   >
+							<uni-icon type="cart" color="#E45E47" size="20" @click="toDetail(item)"></uni-icon>
+						</view>
+					</view>
+				</view>
+			</cell>
+		</list>
+	</scroll-view> 
+</template>
+
+<script>
+	import uniIcon from '@/components/uni-icons/uni-icons.vue'
+	import { getGoodsByShopId } from '@/apis/index.js'
+	
+	export default {
+		components: {
+			uniIcon
+		},
+		data(){
+			 return {
+				 shop_id: "",
+				 product: []
+			 }
+		},
+		methods:{
+			// 详情购买窗口
+			toDetail(goodsItem) {
+				uni.$emit("goodsItem", { goods: goodsItem })
+				const product = uni.getSubNVueById("liveProduct")
+				product.hide("slide-out-bottom")
+				const isDetail = uni.getSubNVueById("prodDetail")
+				isDetail.show("slide-in-bottom")
+			},
+			// 退出
+			exit() {
+				const subNvue = uni.getCurrentSubNVue()
+				subNvue.hide("slide-out-bottom")
+			},
+			// 商品详情页
+			navToDetailPage(item) {
+			   uni.navigateTo({
+			   	url: "/pages/cus_pages/product/product?goods_id="+item.goods_id
+			   })
+			},
+			// 获取商品信息
+			async getGoodsList(data) {
+				const result = await getGoodsByShopId(data)
+				// console.log(result)
+				if(result.code === "000000") {
+					this.product = result.data
+					// console.log(this.product)
+				}
+			}
+		},
+		onLoad(params) {
+			const shop_id = uni.getStorageSync("shop_id") || {}
+			console.log(shop_id)
+			if(shop_id) {
+				this.shop_id = shop_id
+				this.getGoodsList({shop_id})	
+			}
+			uni.$on("shop_id", (data) => {
+				// console.log(data)
+				uni.setStorageSync("shop_id", data.shop_id)
+				this.shop_id = data.shop_id
+				this.getGoodsList({shop_id: data.shop_id})	
+			})	
+		},
+		onUnload() {
+			uni.$off("goodsItem")
+		}
+	}
+</script>
+
+<style>
+  .content {
+	  justify-content: flex-start;
+	  align-items: center;
+	  flex-direction: column;
+	  padding-top: 50upx;
+  }
+  .exit {
+	  position: fixed;
+	  right: 30upx;
+	  top: 20upx;
+  }
+  .title {
+	  position: fixed;
+	  top: 20upx;
+	  left: 0;
+	  right: 0;
+	  text-align: center;
+	  color: #E45E47;
+	  font-size: 28upx;
+  }
+  .product-item {
+	  flex-direction: row;
+	  justify-content: flex-start;
+	  border-radius: 10upx;
+	  align-items: center;
+	  width: 700upx;
+	  height: 250upx;
+	  border-bottom-width: 1px;
+	  border-bottom-color: #EFEFF4;
+  }
+  .prod-image {
+	  width: 200upx;
+	  height: 200upx;
+	  border-radius: 10upx;
+  }
+  .prod-info {
+	  flex-direction: column;
+	  justify-content: space-between;
+	  align-items: flex-start;
+	  padding: 20upx 20upx;
+	  height: 200upx;
+	  width: 500upx;
+  }
+  .prod-title {
+	  flex-direction: row;
+	  width: 450upx;
+	  justify-content: space-between;
+  }
+  .prod-desc {
+	  flex-wrap: wrap;
+	  height: 100upx;
+	  text-overflow: ellipsis;
+	  font-size: 28upx;
+	  line-height: 28upx;
+  }
+  .cart-hover {
+	  background-color:  #EEEEEE;
+	  color: #FFFFFF;
+  }
+  .cart {
+	  width: 70upx;
+	  height: 70upx;
+	  justify-content: center;
+	  align-items: center;
+	  border-radius: 35upx;
+	  border-color: #E45E47;
+	  border-width: 1upx;
+  }
+  .price {
+	  flex-direction: row;
+	  width: 430upx;
+	  justify-content: space-between;
+  }
+</style>
